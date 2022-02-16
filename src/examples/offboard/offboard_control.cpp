@@ -172,10 +172,10 @@ void OffboardControl::publish_offboard_control_mode() const {
 void OffboardControl::publish_trajectory_setpoint() const {
 	TrajectorySetpoint msg{};
 	msg.timestamp = timestamp_.load();
-	msg.x = 0.0;
-	msg.y = 0.0;
-	msg.z = -5.0;
-	msg.yaw = -3.14; // [-PI:PI]
+	msg.x = 1.0;
+	msg.y = 1.0;
+	msg.z = -2.0;
+	msg.yaw = 0.0; // [-PI:PI]
 
 	trajectory_setpoint_publisher_->publish(msg);
 }

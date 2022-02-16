@@ -49,30 +49,58 @@ class SensorCombinedListener : public rclcpp::Node
 {
 public:
 	explicit SensorCombinedListener() : Node("sensor_combined_listener") {
+		auto qos = rclcpp::QoS(
+			// The "KEEP_LAST" history setting tells DDS to store a fixed-size buffer of values before they
+			// are sent, to aid with recovery in the event of dropped messages.
+			// "depth" specifies the size of this buffer.
+			// In this example, we are optimizing for performance and limited resource usage (preventing
+			// page faults), instead of reliability. Thus, we set the size of the history buffer to 1.
+			rclcpp::KeepLast(1)
+		);
+		// From http://www.opendds.org/qosusages.html: "A RELIABLE setting can potentially block while
+		// trying to send." Therefore set the policy to best effort to avoid blocking during execution.
+		qos.best_effort();
 		subscription_ = this->create_subscription<px4_msgs::msg::SensorCombined>(
 			"fmu/sensor_combined/out",
-#ifdef ROS_DEFAULT_API
-            10,
-#endif
+			qos,
 			[this](const px4_msgs::msg::SensorCombined::UniquePtr msg) {
-			std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-			std::cout << "RECEIVED SENSOR COMBINED DATA"   << std::endl;
-			std::cout << "============================="   << std::endl;
-			std::cout << "ts: "          << msg->timestamp    << std::endl;
-			std::cout << "gyro_rad[0]: " << msg->gyro_rad[0]  << std::endl;
-			std::cout << "gyro_rad[1]: " << msg->gyro_rad[1]  << std::endl;
-			std::cout << "gyro_rad[2]: " << msg->gyro_rad[2]  << std::endl;
-			std::cout << "gyro_integral_dt: " << msg->gyro_integral_dt << std::endl;
-			std::cout << "accelerometer_timestamp_relative: " << msg->accelerometer_timestamp_relative << std::endl;
-			std::cout << "accelerometer_m_s2[0]: " << msg->accelerometer_m_s2[0] << std::endl;
-			std::cout << "accelerometer_m_s2[1]: " << msg->accelerometer_m_s2[1] << std::endl;
-			std::cout << "accelerometer_m_s2[2]: " << msg->accelerometer_m_s2[2] << std::endl;
-			std::cout << "accelerometer_integral_dt: " << msg->accelerometer_integral_dt << std::endl;
-		});
+			// std::cout << "\n\n\n\n\n\n\n\n";
+			// std::cout << "RECEIVED SENSOR COMBINED DATA"   << std::endl;
+			// std::cout << "============================="   << std::endl;
+			// std::cout << "\n\n";
+			// std::cout << "ts: "          << msg->timestamp    << std::endl;
+			uint64_t diff = msg->timestamp - t_prev;
+			// std::cout << "s: "			 << diff << std::endl;
+			t_prev = msg->timestamp;
+			sum = sum + diff;
+			count = count + 1;
+
+			if (count == 500) {
+				std::cout << "avg ms: " << sum / count << std::endl;
+				sum = 0;
+				count = 0;
+			}
+			// t_prev_f = (float)
+			// std::cout << "gyro_rad[0]: " << msg->gyro_rad[0]  << std::endl;
+			// std::cout << "gyro_rad[1]: " << msg->gyro_rad[1]  << std::endl;
+			// std::cout << "gyro_rad[2]: " << msg->gyro_rad[2]  << std::endl;
+			// std::cout << "gyro_integral_dt: " << msg->gyro_integral_dt << std::endl;
+			// std::cout << "accelerometer_timestamp_relative: " << msg->accelerometer_timestamp_relative << std::endl;
+			// std::cout << "accelerometer_m_s2[0]: " << msg->accelerometer_m_s2[0] << std::endl;
+			// std::cout << "accelerometer_m_s2[1]: " << msg->accelerometer_m_s2[1] << std::endl;
+			// std::cout << "accelerometer_m_s2[2]: " << msg->accelerometer_m_s2[2] << std::endl;
+			// std::cout << "accelerometer_integral_dt: " << msg->accelerometer_integral_dt << std::endl;
+		}
+		);
 	}
 
 private:
 	rclcpp::Subscription<px4_msgs::msg::SensorCombined>::SharedPtr subscription_;
+
+	uint64_t t_prev = 0;
+	uint64_t sum = 0;
+	float t_prev_f = 0;
+	uint64_t count = 0;
 };
 
 int main(int argc, char *argv[])

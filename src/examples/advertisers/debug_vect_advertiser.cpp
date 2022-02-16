@@ -65,7 +65,7 @@ public:
                                 debug_vect.timestamp, debug_vect.x, debug_vect.y, debug_vect.z);
 			this->publisher_->publish(debug_vect);
 		};
-		timer_ = this->create_wall_timer(500ms, timer_callback);
+		timer_ = this->create_wall_timer(2ms, timer_callback);
 	}
 
 private:

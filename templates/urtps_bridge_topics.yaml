@@ -61,3 +61,16 @@ rtps:
     send: true
   - msg: SensorCombined
     send: true
+  - msg: ActuatorOutputs
+    receive: true
+  - msg: ActuatorControls
+    receive: true
+  - base: ActuatorControls
+    msg: ActuatorControls0
+    receive: true
+  - msg: VehicleRatesSetpoint
+    receive: true
+  - msg: HoverThrustEstimate
+    send: true
+  - msg: VehicleAttitudeSetpoint
+    receive: true
